@@ -54,6 +54,7 @@ void UART_comm::receive(API_data data){
             }
         }
         else{
+            delay((12/_baud)*1000*20); // Dejamos tiempo para que llegue el resto de la estructura.
             while (_serial.available()>0){
                 _serial.read();
             }
