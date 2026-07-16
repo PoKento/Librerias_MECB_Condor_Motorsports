@@ -12,6 +12,28 @@
 #include "UART_comm.h"
 
 
+#pragma pack(push, 1)
+/** Estructura que define todos los datos recibidos del GPS. 
+ * @param lat       Latitud         dd°mm.mmmmmm'[N/S]
+ * @param log       Longitud        ddd°mm.mmmmmm'[E/O]
+ * @param date      Fecha Actual    dd/mm/yyyy
+ * @param UTC_time  Hora            hh:mm ss.s
+ * @param alt       Altitud         metros (m)
+ * @param speed     Velocidad       nudos (kn)
+ * @param course    Dirección       grados respecto al norte (°)
+ */
+struct gps_data 
+{
+    String lat;         //Latitud                       dd°mm.mmmmmm'[N/S]
+    String log;         //Longitud                      ddd°mm.mmmmmm'[E/O]
+    String date;        //Fecha                         dd/mm/yyyy
+    String UTC_time;    //Hora UTC                      hh:mm ss.s
+    String alt;         //Altitud                       metros
+    String speed;       //Velocidad                     Nudos
+    String course;      //Rumbo                         ° (grados)
+};
+#pragma pack(pop)
+
 class SIM_Client
 {
     public:
@@ -19,6 +41,10 @@ class SIM_Client
         bool setup();
         bool send(API_data data);
         bool http_init();
+        bool gps_init();
+        gps_data gps_read();
+
+        
         
     private:
         HardwareSerial _serialAT;

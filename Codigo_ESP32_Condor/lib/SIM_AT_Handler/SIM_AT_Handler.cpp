@@ -3,10 +3,30 @@
 #include "Arduino.h"
 #include "..\GPRS_config.h"
 
+//Función para separar strings por delimitador. Extraída de https://stackoverflow.com/questions/29671455/how-to-split-a-string-using-a-specific-delimiter-in-arduino
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
 
 
 /**
- * 
+ * Inicializa la ESP como cliente del módulo 7600G mediante un canal serial.
+ * @param RX_pin Número del pin de recepción de la comunicación serial.
+ * @param TX_pin Número del pin de transmisión de la comunicación serial.
+ * @param serial_channel Canal serial a utilizar (Serial, Serial1, Serial2).
  */
 SIM_Client::SIM_Client(int RX_pin, int TX_pin, int PWR_pin, HardwareSerial &serial_channel):_serialAT(serial_channel){
     _RX_pin = RX_pin;
@@ -16,7 +36,8 @@ SIM_Client::SIM_Client(int RX_pin, int TX_pin, int PWR_pin, HardwareSerial &seri
 }
 
 /**
- * 
+ * Inicializa la comunicación con el módulo SIM7600G.
+ * @return true si se inicializó correctamente, false si algo falló
  */
 bool SIM_Client::setup(){
     pinMode(_RX_pin, INPUT);
@@ -97,6 +118,11 @@ bool SIM_Client::setup(){
     return true;
 }
 
+
+/**
+ * Inicializa el protocolo HTTP de comunicación mediante la SIM7600G.
+ * @return true si se inicializó correctamente, false si algo falló
+ */
 bool SIM_Client::http_init(){
     
     _serialAT.println("AT+HTTPINIT");               //Inicia la comunicación por HTTP(s)
@@ -139,6 +165,11 @@ bool SIM_Client::http_init(){
 
 }
 
+/**
+ * Envía la estructura de datos con los valores de sensores de temperatura, voltaje y corriente a la base de datos separándola en bytes.
+ * @param data Datos a enviar en el formato de struct API_data.
+ * @return true si se envió correctamente, false si algo falló
+ */
 bool SIM_Client::send(API_data data){
     _serialAT.println('AT+HTTPDATA=16, 5');       //Definimos el tamaño del mensaje (16 bytes) y el máximo tiempo de envío (5s).
 
@@ -167,3 +198,45 @@ bool SIM_Client::send(API_data data){
     return true;
 }
 
+/**
+ * Inicializa el GPS. 
+ */
+bool SIM_Client::gps_init(){
+    _serialAT.println('AT+CGPS=1');       //Iniciamos la sesión de GPS
+
+    while (!_serialAT.available()){}                //Espera a recibir respuesta (Puede demorar hasta 5 minutos)
+
+    if (_serialAT.readStringUntil('\n') == "ERROR"){
+        return false;
+    }
+
+}
+
+/**
+ * Recibe los datos del gps.
+ * @return Los datos se entregan en el formato de estructura gps_data.
+ */
+gps_data SIM_Client::gps_read(){
+    _serialAT.println('AT+CGPSINFO');       //Solicita la información del GPS
+
+    while (!_serialAT.available()){}                //Espera a recibir respuesta 
+
+    String data = _serialAT.readStringUntil('\n');
+
+    if (data == "ERROR"){
+        return;
+    }
+
+    gps_data Output_Data;
+    Output_Data.lat = data.substring(10,12)+"°"+data.substring(12,21)+"'"+data.substring(22,23);
+    Output_Data.log = data.substring(24,27)+"°"+data.substring(27,36)+"'"+data.substring(37,38);
+    Output_Data.date = data.substring(39,41)+"/"+data.substring(41,43)+"/20"+data.substring(43,45);
+    Output_Data.UTC_time = data.substring(46,48)+":"+data.substring(48,50)+" "+data.substring(46,54);
+    String resto = data.substring(55);
+    Output_Data.alt = getValue(resto,',',0)+" m";
+    Output_Data.speed = getValue(resto,',',1)+" kn";
+    Output_Data.course = getValue(resto,',',2)+"°";
+
+    return Output_Data;
+
+}
