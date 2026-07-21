@@ -18,11 +18,17 @@ Relay_Control::Relay_Control(int SolarPin, int BattPin){
     digitalWrite(_BattPin, LOW);
 }
 
+/**
+ * Apaga los relés de los paneles solares y batería principal.
+ */
 void Relay_Control::off(){
     digitalWrite(_SolarPin, LOW);
     digitalWrite(_BattPin, LOW);
 }
 
+/**
+ * Apaga los relés de los paneles solares y batería principal.
+ */
 void Relay_Control::on(){
     digitalWrite(_SolarPin, HIGH);
     digitalWrite(_BattPin, HIGH);

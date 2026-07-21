@@ -1,6 +1,6 @@
 /*
-    Relay_Control.h - Librería para control de 
-    Creado por Kento Chibana 11/07/2026
+    Relay_Control.h - Librería para control de los relés del catamarán.
+    Creado por Kento Chibana 16/07/2026
     Para MECB Cóndor Mótorsports
 */
 
