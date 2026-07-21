@@ -13,6 +13,6 @@
 //Configuraciones de InfluxDB
 
 #define INFLUXDB_URL "http://your-influx-host:8086"     //Reemplazar por la dirección del servidor en el que se Hostea la instancia de InfluxDB.
-#define INFLUXDB_ORG "Condor_Motorsports"
+#define INFLUXDB_ORG "caffdd9942df495a"                 //ID de la organización en InfluxDB
 #define INFLUXDB_BUCKET "Datos_Tonina"
 #define INFLUXDB_TOKEN "6031a4db7cc388d134d7185d18aa1609de8f49b51999b2526aa1ee552269af5c" //Token generado aleatoriamente. Se genera en la plataforma de InfluxDB.
