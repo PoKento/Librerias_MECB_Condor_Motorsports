@@ -122,7 +122,7 @@ bool SIM_Client::setup(){
     InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
     
     // Declare Data point
-    Point _sensor("Sensor_Data");
+    //Point _sensor("Sensor_Data");
     
 
     // Accurate time is necessary for certificate validation and writing in batches

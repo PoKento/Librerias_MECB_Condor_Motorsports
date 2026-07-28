@@ -12,8 +12,6 @@
 
 #pragma pack(push, 1)
 /** Estructura que define todos los datos enviados entre ESPs y a la base de datos. 
- * @param temperatura_BP Temperatura de la batería principal.
- * @param temperatura_BS Temperatura de la batería secundaria.
  * @param temperatura_BP Temperatura de la batería principal.    
  * @param temperatura_BS Temperatura de la batería secundaria .  
  * @param V_BP           Voltaje de la batería principal. 
@@ -48,8 +46,8 @@ class UART_comm
     public:
         UART_comm(int RX_pin, int TX_pin, int baud_rate, HardwareSerial &serial_channel);
         void begin(SerialConfig config = SERIAL_8N1);
-        void send(API_data data);
-        void receive(API_data data);
+        void send(API_data data, GY_85_data gy85);
+        void receive(API_data data, GY_85_data gy85);
 
     private:
         int _rx_pin;

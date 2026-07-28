@@ -2,6 +2,7 @@
 #include "UART_comm.h"
 #include <iostream>
 #include <cstring>
+#include "GY-85.h"
 
 
 
@@ -24,13 +25,21 @@ void UART_comm::begin(SerialConfig config){
 /**
  * Envía la estructura de datos a través del canal serial en paquetes de 8 bits.
  * @param data Estructura del tipo API_data con los datos a enviar.
+ * @param gy85 Estructura del tipo GY_85_data con los datos a enviar.
 */
-void UART_comm::send(API_data data){
+void UART_comm::send(API_data data, GY_85_data gy85){
     uint8_t* ptr = (uint8_t*)&data; //Casting del puntero de la estructura a un puntero de 8 bits.
 
     for (byte i=0 ; i < sizeof(data) ;i++){
         _serial.write(*ptr++);      //Envío de 8 bits actuales y avance de la variable ptr en 1.
     }
+
+    uint8_t* ptr = (uint8_t*)&gy85; //Casting del puntero de la estructura a un puntero de 8 bits.
+
+    for (byte i=0 ; i < sizeof(gy85) ;i++){
+        _serial.write(*ptr++);      //Envío de 8 bits actuales y avance de la variable ptr en 1.
+    }
+
 
 }
 
@@ -38,11 +47,27 @@ void UART_comm::send(API_data data){
 /**
  * Lee los datos del buffer serial y los reemplaza directamente en el sitio de memoria de la estructura entregada. En caso de no haber suficientes bytes en el buffer de recepción no hace nada.
  * @param data Estructura de datos API_data que se quiera actualizar con los datos entrantes.
+ * @param gy85 Estructura de datos del sensor GY-85 que se quiera actualizar.
 */
-void UART_comm::receive(API_data data){
-    int received_bytes = 0;
-    uint8_t byte_array[sizeof(API_data)];
-    
+void UART_comm::receive(API_data data, GY_85_data gy85){
+
+    if (_serial.available() > sizeof(API_data)+sizeof(gy85)-1){
+        int received_bytes = 0;
+        uint8_t byte_array_tele[sizeof(API_data)];
+        uint8_t byte_array_gy85[sizeof(GY_85_data)];
+        received_bytes += _serial.readBytes(byte_array_tele, sizeof(API_data));
+        received_bytes += _serial.readBytes(byte_array_gy85, sizeof(GY_85_data));
+
+        std::memcpy(&data, byte_array_tele, sizeof(data));
+        std::memcpy(&gy85, byte_array_gy85, sizeof(gy85));
+
+    }
+
+
+
+
+    /*
+
     if (_serial.available()%sizeof(API_data)==0 && _serial.available()>0){//Nos aseguramos de que hayan llegado una cantidad entera de datos.
         delay((12/_baud)*1000); //Esperamos a que se lea 1 byte extra (10 bits, start-stop-8 datos + 2 bits de tiempo extra)
 
@@ -60,4 +85,8 @@ void UART_comm::receive(API_data data){
             }
         }
     }
+    */
+
+
+
 }

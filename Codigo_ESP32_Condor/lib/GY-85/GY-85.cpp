@@ -57,7 +57,7 @@ void GY_85::begin(){
  * Lectura del acelerómetro. 
  * @return Tupla con el Roll y el Pitch en grados respecto al eje (°), y las aceleraciones filtradas por eje en gs ({Roll, Pitch, aX, aY, aZ}).
  */
-std::tuple<int16_t,int16_t,int16_t,int16_t,int16_t> GY_85::read_accel(){
+std::tuple<short,short,int16_t,int16_t,int16_t> GY_85::read_accel(){
     
 
     // Leer datos de ADXL345 (Acelerómetro)
@@ -74,8 +74,8 @@ std::tuple<int16_t,int16_t,int16_t,int16_t,int16_t> GY_85::read_accel(){
     int16_t fZg = az * _accel_alpha + fZg * (1.0 - _accel_alpha);
 
 
-    int16_t Roll = atan2(fYg, fZg) * 180/PI;                //Transformación a Roll y Pitch
-    int16_t Pitch = atan2(-fXg, sqrt(fYg*fYg + fZg*fZg)) * 180/PI;
+    short Roll = atan2(fYg, fZg) * 180/PI;                //Transformación a Roll y Pitch
+    short Pitch = atan2(-fXg, sqrt(fYg*fYg + fZg*fZg)) * 180/PI;
     
     return {Roll, Pitch, fXg, fYg, fZg};
 }
@@ -197,3 +197,23 @@ void GY_85::config_magnet(int magn_gain_lvl, float magn_decl){
     Wire.endTransmission();
 
 };
+
+
+
+GY_85_data GY_85::read_all(){
+    std::tuple<int16_t, int16_t, int16_t> gyro = read_gyro();
+    std::tuple<int16_t,int16_t,int16_t,int16_t,int16_t> accel = read_accel();
+    int16_t magnet = read_magnet();
+    GY_85_data data;
+    data.gx = std::get<0>(gyro);
+    data.gy = std::get<1>(gyro);
+    data.gz = std::get<2>(gyro);
+    data.Roll = std::get<0>(accel);
+    data.Pitch = std::get<1>(accel);
+    data.fXg = std::get<2>(accel);
+    data.fYg = std::get<3>(accel);
+    data.fZg = std::get<4>(accel);
+    data.magnet = magnet;
+
+    return data;
+}

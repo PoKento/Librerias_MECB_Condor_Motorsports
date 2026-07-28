@@ -10,6 +10,8 @@
 
 #include "Arduino.h"
 #include "Adafruit_ST7735.h"
+#include "UART_comm.h"
+#include "SIM_influxdb.h"
 
 class TFT_ST7735
 {
@@ -18,6 +20,9 @@ class TFT_ST7735
         void begin();
         void write(int16_t color, String text, int size, int pos_X, int pos_Y);
         void condor_logo(int pos_X, int pos_Y);
+        void update_orientation(int16_t x_len, int16_t y_len, int16_t roll, int16_t pitch);
+        void alert();
+        void update_telemetry(API_data data, gps_data gps);
 
 
     private:
