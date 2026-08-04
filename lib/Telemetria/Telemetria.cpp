@@ -5,7 +5,7 @@
 
 
 
-Telemetria::Telemetria(int SCL_Pin, int SDA_Pin, int ADDR_Pin, int oneWire_Pin, float rated_Input_Current_HSTS016L, float rated_Supply_Voltage_HSTS016L, Adafruit_ADS1115 &ads1, Adafruit_ADS1115 &ads2):_ads1(ads1),_ads2(ads2){
+Telemetria::Telemetria(int SCL_Pin, int SDA_Pin, int ADDR_Pin, int oneWire_Pin, float rated_Input_Current_HSTS016L, float rated_Supply_Voltage_HSTS016L){
     _SCL_Pin = SCL_Pin;
     _SDA_Pin = SDA_Pin;
     _ADDR_Pin = ADDR_Pin;
@@ -16,12 +16,20 @@ Telemetria::Telemetria(int SCL_Pin, int SDA_Pin, int ADDR_Pin, int oneWire_Pin, 
 
 
 void Telemetria::setup(){
+    Wire.begin();
     _ads1.setGain(GAIN_TWO);
     _ads2.setGain(GAIN_TWO);
     _ads1.begin(0x48);           //ADDR -> GND
     _ads2.begin(0x49);           //ADDR -> 5V
     _ads1.setDataRate(RATE_ADS1115_250SPS);
     _ads2.setDataRate(RATE_ADS1115_250SPS);
+    _Ina226.begin();
+    _Ina226.setAverage(2);      //Promediador de 16 muestras
+    delay(100);
+    _Ina226.setMaxCurrentShunt(5, 0.005);      //Corriente máxima esperada de 5A, con una resistencia shunt de 0.005Ohm
+    _ds18b20 = OneWire(_oneWire_Pin);
+    _T_sensors = DallasTemperature(&_ds18b20);
+    _T_sensors.begin();
 }
 
 
@@ -32,7 +40,7 @@ void Telemetria::setup(){
  @return Devuelve el valor de la temperatura en °C (short).
 */
 float Telemetria::read_temp(int battery_index){
-
+    return _T_sensors.getTempCByIndex(battery_index);
 
 }
 
@@ -47,6 +55,7 @@ float Telemetria::read_voltage(int component_index){
     }
     else if (component_index == 1){
         //Lectura del Ina226
+        return _Ina226.getBusVoltage();
     }
     else if (component_index == 2){
         return _ads1.computeVolts(_ads1.readADC_Differential_2_3());
@@ -65,6 +74,7 @@ float Telemetria::read_current(int component_index){
     }
     else if (component_index == 1){
         //Lectura del Ina226
+        return _Ina226.getCurrent();
     }
     else if (component_index == 2){
         return ((_ads2.computeVolts(_ads2.readADC_Differential_2_3())-(_rated_Supply_Voltage_HSTS016L/2))/0.625)*_rated_Input_Current_HSTS016L;
@@ -74,5 +84,15 @@ float Telemetria::read_current(int component_index){
 }
 
 API_data Telemetria::read_all(){
+    API_data Temp;
+    Temp.temperatura_BP = read_temp(0);
+    Temp.temperatura_BS = read_temp(1);
+    Temp.V_BP = read_voltage(0);
+    Temp.V_BS = read_voltage(1);
+    Temp.V_Motor = read_voltage(2);
+    Temp.C_BP = read_current(0);
+    Temp.C_BS = read_current(1);
+    Temp.C_Motor = read_current(2);
 
+    return Temp;
 }
