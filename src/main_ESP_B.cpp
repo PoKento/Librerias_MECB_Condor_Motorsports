@@ -5,17 +5,18 @@
 #include "Relay_Control.h"
 #include "GY-85.h"
 #include "Config_ESP_B.h"
+#include "Telemetria.h"
 
 // Protección para datos compartidos entre núcleos
 portMUX_TYPE dataMux = portMUX_INITIALIZER_UNLOCKED;
 
 UART_comm uart(RX_uart, TX_uart, 115200, Serial2);
-GY_85 gy85(GY_85_SDA, GY_85_SCL);
+GY_85 gy85(SDA, SCL);
 
 API_data telemetry_data;
 GY_85_data GY85_data;
 
-
+Telemetria tele(SCL, SDA, ADS1115_ADDR, OneWirePin, rated_Input_Current_HSTS016L, rated_Supply_Voltage_HSTS016L);
 
 void task_GY85(void *pv){
     portENTER_CRITICAL(&dataMux);
@@ -32,7 +33,7 @@ void task_UART(void *pv){
 
 void task_Tele(void *pv){
     portENTER_CRITICAL(&dataMux);
-    telemetry_data;
+    telemetry_data = tele.read_all();
     portEXIT_CRITICAL(&dataMux);
     vTaskDelay(pdMS_TO_TICKS(500)); //Ejecutar esta tarea cada medio segundo
 }
