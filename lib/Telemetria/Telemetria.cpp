@@ -4,32 +4,50 @@
 
 
 
-
-Telemetria::Telemetria(int SCL_Pin, int SDA_Pin, int ADDR_Pin, int oneWire_Pin, float rated_Input_Current_HSTS016L, float rated_Supply_Voltage_HSTS016L){
+/**
+ *Inicializa un objeto de la clase Telemetria.
+*/
+Telemetria::Telemetria(int SCL_Pin, int SDA_Pin, int oneWire_Pin, float rated_Input_Current_HSTS016L, float rated_Supply_Voltage_HSTS016L,bool ds18b20, bool ads1115, bool ina2xx, bool HSTS016L){
     _SCL_Pin = SCL_Pin;
     _SDA_Pin = SDA_Pin;
-    _ADDR_Pin = ADDR_Pin;
     _oneWire_Pin = oneWire_Pin;
     _rated_Input_Current_HSTS016L = rated_Input_Current_HSTS016L;
     _rated_Supply_Voltage_HSTS016L = rated_Supply_Voltage_HSTS016L;
+    _ds18b20_on = ds18b20;
+    _ads1115_on = ads1115;
+    _ina2xx_on = ina2xx;
+    _HSTS016L_on = HSTS016L;
 }
 
 
 void Telemetria::setup(){
     Wire.begin();
-    _ads1.setGain(GAIN_TWO);
-    _ads2.setGain(GAIN_TWO);
-    _ads1.begin(0x48);           //ADDR -> GND
-    _ads2.begin(0x49);           //ADDR -> 5V
-    _ads1.setDataRate(RATE_ADS1115_250SPS);
-    _ads2.setDataRate(RATE_ADS1115_250SPS);
-    _Ina226.begin();
-    _Ina226.setAverage(2);      //Promediador de 16 muestras
+    Wire.setPins(_SDA_Pin, _SCL_Pin);
     delay(100);
-    _Ina226.setMaxCurrentShunt(5, 0.005);      //Corriente máxima esperada de 5A, con una resistencia shunt de 0.005Ohm
-    _ds18b20 = OneWire(_oneWire_Pin);
-    _T_sensors = DallasTemperature(&_ds18b20);
-    _T_sensors.begin();
+
+    if (_ds18b20_on){
+        _ds18b20 = OneWire(_oneWire_Pin);
+        _T_sensors = DallasTemperature(&_ds18b20);
+        _T_sensors.begin();
+    }
+    if (_ads1115_on){
+        _ads1.setGain(GAIN_TWO);
+        _ads2.setGain(GAIN_TWO);
+        _ads1.begin(0x48, &Wire);           //ADDR -> GND
+        _ads2.begin(0x49, &Wire);           //ADDR -> 5V
+        _ads1.setDataRate(RATE_ADS1115_250SPS);
+        _ads2.setDataRate(RATE_ADS1115_250SPS);
+    }
+    if (_ina2xx_on){
+        _Ina226 = INA226(0x40, &Wire);
+        _Ina226.begin();
+        _Ina226.setAverage(2);      //Promediador de 16 muestras
+        delay(100);
+        _Ina226.setMaxCurrentShunt(5, 0.005);      //Corriente máxima esperada de 5A, con una resistencia shunt de 0.005Ohm
+    }
+    delay(100);
+    
+    
 }
 
 
