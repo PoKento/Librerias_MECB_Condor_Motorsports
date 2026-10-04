@@ -140,7 +140,7 @@ void TFT_ST7735::begin(){
 
 /**
  * Escribe texto en la pantalla.
- * @param color Color del texto.
+ * @param color Color del texto (RGB565).
  * @param text Un string con el texto a imprimir.
  * @param size Tamaño de fuente.
  * @param posX La posición X del inicio del texto.
